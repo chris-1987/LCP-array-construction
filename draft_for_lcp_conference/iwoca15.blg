@@ -1,0 +1,30 @@
+This is BibTeX, Version 0.99dThe top-level auxiliary file: iwoca15.aux
+The style file: unsrt.bst
+Database file #1: bibfile.bib
+I was expecting a `,' or a `}'---line 90 of file bibfile.bib
+ :   
+ :   pages = {326-337},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+Name 2 in "M.~Abouelhodaa and S.~Kurtzb, and E.~Ohlebuscha" has a comma at the end for entry Abouelhodaa2004
+while executing---line 944 of file unsrt.bst
+Name 2 in "G.~Nong and S.~Zhang, and W.~H.~Chan" has a comma at the end for entry nong2011
+while executing---line 944 of file unsrt.bst
+Warning--empty publisher in Fischer11
+Name 3 in "G.~Nong and W.~H.~Chan and S.~Q.~Hu, and Y.~Wu" has a comma at the end for entry Nong15
+while executing---line 944 of file unsrt.bst
+Warning--empty year in Bingmann12
+Name 3 in "G.~Nong and W.~H.~Chan and S.~Zhang, and X.~F.~Guan" has a comma at the end for entry Nong14
+while executing---line 944 of file unsrt.bst
+Name 3 in "R.~Dementiev and J.~K\"{a}rkk\"{a}inen and J.~Mehnert, and P.~Sanders" has a comma at the end for entry Dementiev08
+while executing---line 944 of file unsrt.bst
+Name 2 in "F.~Louza and G.~Telles, and C.~Ciferri" has a comma at the end for entry Felipe2013
+while executing---line 944 of file unsrt.bst
+Name 2 in "M.~Bauer and A.~C.~G.~Rosone, and M.~Sciortino" has a comma at the end for entry Markus2012
+while executing---line 944 of file unsrt.bst
+Name 4 in "P.~Bille and I.~L.~G{\o}rtz and T.~Kopelowitz and B.~Sach, and H.~W.~Vildh{\o}j" has a comma at the end for entry Philip2013
+while executing---line 944 of file unsrt.bst
+Warning--empty journal in Philip2013
+Name 2 in "R.~Dementiev and L.~Kettner, and P.~Sanders" has a comma at the end for entry Dementiev2007
+while executing---line 944 of file unsrt.bst
+(There were 10 error messages)

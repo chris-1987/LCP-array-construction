@@ -1,0 +1,32 @@
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (MiKTeX 2.9) (preloaded format=pdftex 2015.11.4)  4 NOV 2015 17:33
+entering extended mode
+**C:/Users/liuwjun/Desktop/课题资料/海量LCP构造/draft_for_lcp/draft_in_
+tpds/bibfile.bib
+
+(C:/Users/liuwjun/Desktop/课题资料/海量LCP构造/draft_for_lcp/draft_in_t
+pds/bibfile.bib
+Overfull \hbox (4.55153pt too wide) in paragraph at lines 11--21
+[]\tenrm @articleAbouelhodaa2004, ti-tle=Replacing Suf-fix Trees with En-hanced
+ Suf-fix Ar-rays, au-thor=M. Abouel-|
+
+\hbox(6.94444+1.94444)x469.75499, glue set - 1.0
+.\hbox(0.0+0.0)x20.0
+.\tenrm @
+.\tenrm a
+.\tenrm r
+.\tenrm t
+.etc.
+
+[1{C:/CTEX/UserData/pdftex/config/pdftex.map{Unicode.sfd}{UGBK.sfd}}]
+Missing character: There is no � in font cmr10!
+Missing character: There is no � in font cmr10!
+Missing character: There is no � in font cmr10!
+Missing character: There is no � in font cmr10!
+)
+*
+! Emergency stop.
+<*> ...造/draft_for_lcp/draft_in_tpds/bibfile.bib
+                                                  
+End of file on the terminal!
+
+!  ==> Fatal error occurred, no output PDF file produced!

@@ -1,0 +1,99 @@
+\begin{thebibliography}{10}
+
+\bibitem{Manber1993}
+U.~Manber and G.~Myers.
+\newblock {Suffix Arrays: A New Method for On-line String Searches}.
+\newblock {\em SIAM Journal on Computing}, 22(5):935--948, 1993.
+
+\bibitem{Abouelhodaa2004}
+M.~Abouelhodaa and E.~Ohlebuscha S.~Kurtzb.
+\newblock {Replacing Suffix Trees with Enhanced Suffix Arrays}.
+\newblock {\em Journal of Discrete Algorithms}, 2(1):53--86, November 2004.
+
+\bibitem{nong2011}
+G.~Nong, S.~Zhang, and W.~H. Chan.
+\newblock {Two Efficient Algorithms for Linear Time Suffix Array Construction}.
+\newblock {\em IEEE Transactions on Computers}, 60(10):1471--1484, October
+  2011.
+
+\bibitem{Fischer11}
+J.~Fischer.
+\newblock {Inducing the {LCP}-Array}.
+\newblock In {\em Algorithms and Data Structures}, volume 6844 of {\em Lecture
+  Notes in Computer Science}, pages 374--385. 2011.
+
+\bibitem{Nong15}
+G.~Nong, W.~H. Chan, H.~S. Qing, and Y.~Wu.
+\newblock {Induced Sorting Suffixes in External Memory}.
+\newblock {\em ACM Transactions on Information Systems}, 33(3):12:1--12:15,
+  March 2015.
+
+\bibitem{Bingmann12}
+T.~Bingmann, J.~Fischer, and V.~Osipov.
+\newblock Inducing suffix and lcp arrays in external memory.
+\newblock In {\em 2013 Proceedings of the Fifteenth Workshop on Algorithm
+  Engineering and Experiments (ALENEX)}, pages 88--102.
+
+\bibitem{Nong14}
+G.~Nong, W.~H. Chan, S.~Zhang, and X.~F. Guan.
+\newblock {Suffix Array Construction in External Memory Using D-Critical
+  Substrings}.
+\newblock {\em ACM Transactions on Information Systems}, 32(1):1:1--1:15,
+  January 2014.
+
+\bibitem{Dementiev08}
+R.~Dementiev, J.~K\"{a}rkk\"{a}inen, J.~Mehnert, and P.~Sanders.
+\newblock {Better External Memory Suffix Array Construction}.
+\newblock {\em ACM Journal of Experimental Algorithmics}, 12:3.4:1--3.4:24,
+  August 2008.
+
+\bibitem{Felipe2013}
+F.~Louza, G.~Telles, and C.~Ciferri.
+\newblock {External Memory Generalized Suffix and LCP Arrays Construction}.
+\newblock In {\em Proceedings of 24th Annual Symposium on Combinatorial Pattern
+  Matching}, pages 201--210, Bad Herrenalb, Germany, June 2013.
+
+\bibitem{Markus2012}
+M.~Bauer, A.~C.~G. Rosone, and M.~Sciortino.
+\newblock {Lightweight LCP Construction for Next-Generation Sequencing
+  Datasets}.
+\newblock In {\em Proceedings of 12th International Workshop on Algorithms in
+  Bioinformatics}, Ljubljana, Slovenia, September 2012.
+
+\bibitem{Juha2014}
+J.~K\"{a}rkk\"{a}inen and D.~Kempa.
+\newblock {LCP Array Construction in External Memory}.
+\newblock In {\em Proceedings of 13th International Symposium on Experimental
+  Algorithms}, pages 412--423, Copenhagen, Denmark, June 2014.
+
+\bibitem{Philip2013}
+P.~Bille, I.~L. G{\o}rtz, T.~Kopelowitz, B.~Sach, and H.~W. Vildh{\o}j.
+\newblock {Sparse Suffix Tree Construction in Small Space}.
+\newblock pages 148--159, July 2013.
+
+\bibitem{Shun2014}
+J.~Shun.
+\newblock {Fast Parallel Computation of Longest Common Prefixes}.
+\newblock In {\em Proceedings of 40th International Conference on High
+  Performance Computing, Networking, Storage and Analysis}, pages 387--398, New
+  Orleans, LA, November 2014.
+
+\bibitem{Deo2013}
+M.~Deo and S.~Keely.
+\newblock {Parallel Suffix Array and Least Common Prefix for the GPU}.
+\newblock In {\em Proceedings of the 18th ACM SIGPLAN Symposium on Principles
+  and Practice of Parallel Programming}, pages 197--206, New York ,USA, August
+  2013.
+
+\bibitem{Karp1987}
+R.~Karp and M.~Rabin.
+\newblock {Efficient Randomized Pattern Matching Algorithms}.
+\newblock {\em IBM Journal of Research and Development}, 31(2):249--260, March
+  1987.
+
+\bibitem{Dementiev2007}
+R.~Dementiev, L.~Kettner, and P.~Sanders.
+\newblock {STXXL: Standard Template Library for XXL Data Sets}.
+\newblock {\em Software: Practice and Experience}, 38(6):589--637, 2008.
+
+\end{thebibliography}

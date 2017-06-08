@@ -1,0 +1,231 @@
+\documentclass{llncs}
+\usepackage[english]{babel}
+\usepackage{cite}
+\usepackage{enumerate}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{color}
+\usepackage{amssymb}
+\usepackage{graphicx}
+% THEOREMS -------------------------------------------------------
+\newtheorem{thm}{Theorem}
+\newtheorem{col}{Corollary}
+\newtheorem{lem}{Lemma}
+% ALGORITHMS -----------------------------------------------------
+
+\usepackage[linesnumbered,ruled]{algorithm2e}
+\begin{document}
+
+
+\title{A Scalable K-order LCP Construction Method for Large-Scale Data Sets}
+
+\author{Yi~Wu and Ge~Nong$^*$}
+
+\institute{Department of Computer Science\\
+Sun Yat-sen University, Guangzhou, China \\
+$^*$Corresponding Author, Email: issng@mail.sysu.edu.cn}
+\maketitle
+
+\begin{abstract}
+In this article, we present a practical method to compute the K-order longest common prefix array for an input string $T$ of size {\em n} along with its suffix array. Both theoretical analysis and simulation experiment indicate that the LCP array can be constructed using $\mathcal{O}(n\log K)$ time in RAM and EM models. We also demonstrate that the proposed method can be easily extended to be deployed in a distributed system consisting of {\em d} computing nodes, where the time and space complexity is linear proportional to {\em n} when $d=\mathcal{O}(\log K)$.
+\end{abstract}
+
+\section{Introduction}
+
+Suffix array~(SA)~\cite{Manber1993} is a compact data structure for text indexing. Augmented with the longest common prefix array~(LCPA), SA can emulate a bottom-up or top-down traversal of its corresponding suffix tree and thus becomes popular in various string processing tasks previously tackled by suffix tree~\cite{Abouelhodaa2004}.
+
+Until now, the most time- and space-efficient SA and LCPA construction algorithms in random access memory~(RAM) model are based on the induced sorting principle~\cite{nong2011,Fischer11}. However, with the substantial improvement in data sampling techniques, the size of a text or genome data set may exceed RAM capacity and thus cannot be processed internally. To meet the gap, recently, three novel schemes~\cite{Nong15, Bingmann-Code12, Nong14} have been designed to adapt the internal {\em SA} construction algorithm SA-IS~\cite{nong2011} for sorting suffixes in external memory~(EM). As reported in these works, all of the three algorithms achieved a remarkable performance gain in terms of time, space and I/O efficiency against prior arts~\cite{Dementiev08}.
+
+As for LCPA computation in EM model,~\cite{Bingmann-Code12} reformulated the internal memory construction method formerly presented in~\cite{Fischer11} to make it feasible in $EM$ model. Besides,~\cite{Markus2012} proposed a lightweight construction scheme for very large collections of sequences, where the Burrow-Wheeler Transform~(BWT) must be computed simultaneously to facilitate the construction of LCPA. In addition,~\cite{Felipe2013} adopted the technique of multi-way merge-sort to compute generalized suffix and LCP arrays of a data set composed of multiple strings of variable-lengths. Moreover,~\cite{Juha2014} reported a scheme that computes the LCP array for a given SA according to the permuted LCPA and inverse SA constructed in advance.
+
+As observed in~\cite{Felipe2013}, the average LCP lengths of different corpora are extremely small in usual, especially for genome data sets, such as protein and dna. This enlightened us to design practical algorithms for computing finite-order LCP array, where the LCP length of any two suffixes in $T$ is assumed to be lower than $K<<|T|$~(eg. $K=8192$).
+
+Our contributions are:
+\begin{enumerate}
+\item In this paper, we first design and implement a K-order LCPA construction scheme applicable to both RAM and EM models, which exploits the use of the LCP batch querying technique~(LCP-BQT)~\cite{Philip2013} previously proposed for sparse SA construction. The theoretical analysis and simulation experiment indicate that the LCP array can be constructed in $\mathcal{O}(n\log K)$ time.
+\item To our best knowledge, the existing parallel LCPA construction algorithms are only suitable for shared-memory models, such as BSP~(Bulk Synchronous Parallel) and PRAM~(Parallel Random Access Machine)~\cite{Shun2014,Deo2013}. Differentiate from the prior arts, we parallelize our LCP construction method in a distributed system consisting of {\em d} computing nodes, where the time complexity is $\mathcal{O}(\frac{n}{d}\log K)$ on each node.  As far as we know, this is the first distributed algorithm for LCPA construction.
+\end{enumerate}
+
+\section{K-order LCPA Construction in RAM Model}
+
+\subsection{Basic Notations}\label{subsec:basic_notations}
+
+Consider an input text $T[0,n-1] =T[0]T[1]...T[n-1]$ of size {\em n} drawn from an ordered alphabet $\Sigma$. We assume $T[n-1]$ to be a unique character alphabetically smaller than any characters in $T[0,n-2]$.
+
+We write ${\sf pre}(T,i)$ to be the prefix of $T$ starting at at $T[0]$ and ending at $T[i]$. 
+
+We write ${\sf suf}(T,i)$ to be the suffix of $T$ running from $T[i]$ to $T[n-1]$. The suffix array of $T$, namely $SA_T$, is a permutation of integers $[0,n)$ such that ${\sf suf}(T,SA_T[0])<{\sf suf}(T,SA_T[1])<...<{\sf suf}(T,SA_T[n-1])$ in their lexicographic order.
+
+We write ${\sf lcp}(i,j)$ to be the longest common prefix length of ${\sf suf}(T,i)$ and ${\sf suf}(T,j)$. The LCP array of T, namely $LCPA_T$, is an array of integers ranging in $[0,n)$, where $LCPA_T[i]= {\sf lcp}(SA_T[i],SA_T[i-1])$ for $i \in [1,n-1]$.
+
+\subsection{LCP Batch Querying Technique}
+
+Given $T$ and a set of {\em b} pairs of position-indices $P$, the LCP batch querying technique~(LCP-BQT) can compute ${\sf lcp}(i,j)$ for all pairs $(i,j)\in P$ using $\mathcal{O}(n\log b)$ time and $\mathcal{O}(n)$ space in RAM model. The main idea of LCP-BQT is to find the position-indices $i_{fin}(\ge i)$ and $j_{fin}(\ge j)$ for each pair $(i,j)$ that satisfies $T[i,i_{fin}-1]=T[j,j_{fin}-1]$ and $T[i_{fin}] \neq T[j_{fin}]$. To do this, it initializes $P_0$ to $P$ and performs a loop of $\log b$ rounds, where the goal of round $k\in [0,\log b)$ is to decide whether ${\sf lcp}(i_k,j_k) \le 2^{\log n - k - 1}$ or not for each pair $(i_k,j_k)\in P_k$ and generate $P_{k+1}$ as the input for round $k+1$ as following: if $T[i_k,i_k+2^{\log n - k - 1}] \neq T[j_k,j_k+2^{\log n - k - 1}]$, then insert $(i_k,j_k)$ into $P_{k+1}$; otherwise, insert $(i_k+2^{\log n - k - 1},j_k+2^{\log n - k - 1})$ into $P_{k+1}$. The comparison operation in concern can be accomplished by scanning the two substrings from left to right and comparing the corresponding characters in their lexical order. However, this may take $O(2^{\log n - k - 1})$ time at worst and thus become a performance bottleneck. As a solution to relieving the overhead, authors in~\cite{Philip2013} employed a finger-printing function~\cite{Karp1987} to convert string comparisons into their integer counterparts that can be executed in O(1) time.
+
+The finger-print~(FP) of a substring $T[i,j]$, denoted $FP[i,j]$, is defined by the formula $FP[i,j] = \sum_{p=i}^{j} \delta^{j-p} \cdot T[p] \, mod \, L$, where $L$ is a prime and $\delta$ is an integer randomly chosen from $[1,L)$. Identical strings will always have a same finger-print, but the converse is not true. Fortunately, it has been proved that the error probability of two different strings having a same finger-print can be ignored when $L$ is very large. Therefore we can compare the finger-prints of two substrings to correctly determine their equality with a high-probability.
+
+According to the afore-mentioned description, we give the 3-step algorithmic framework for round $k$ of the loop, where $P_0=P$ and $k=0$ at the very beginning.
+
+\begin{itemize}
+\item step 1: Scan $T$ rightward to iteratively compute the finger-print of ${\sf pre}[0,l]$ by the formula ${\sf FP}[0,l] = {\sf FP}[0,l-1] \cdot \delta + T[l] \, mod \, L$. During the time, employ a hash table to record $\{FP[0,l] \mid p\in \{i_k-1\}\cup\{j_k-1\}\cup\{i_k+2^{\log n - k - 1}\}\cup\{j_k+2^{\log n - k - 1}\},(i_k,j_k)\in P_k\}$.
+\item step 2: For each $l\in \{\{i_k\}\cup \{j_k\}$, $(i_k,j_k)\in P_k\}$, compute the finger-print of substring $T[l,l+2^{\log n - k - 1}]$ by the formula $FP[l,l+2^{\log n - k - 1}]=FP[0,l+2^{\log n - k - 1}] - FP[0,l-1] \cdot \delta^{2^{\log n - k - 1}} \, mod \, L$, where the finger-prints are extracted from the hash table produced in step 1.
+\item step 3: For each pair $(i_k,j_k)\in P_k$, compare the two substrings $T[i_k,i_k+2^{\log n - k - 1}]$ and $T[j_k,j_k+2^{\log n - k - 1}]$ by their finger-prints computed in step 2. If equal, insert $(i_k+2^{\log n - k - 1},j_k+2^{\log n - k - 1})$ into $P_{k+1}$; otherwise, insert $(i_k, j_k)$ into $P_{k+1}$.
+\end{itemize}
+
+The following two properties remain invariant in the whole loop.
+
+\begin{itemize}
+\item At the begin of round $k$, for each pair $(i_k,j_k) \in P_k$, $lcp(i_k,j_k) \le 2^{\log n - k}$.
+\item At the end of round $k$, for each pair $(i_{k+1},j_{k+1}) \in P_{k+1}$, $lcp(i_{k+1},j_{k+1}) \le 2^{\log n - k - 1}$.
+\end{itemize}
+
+
+After the loop, we have $lcp(i_{\log b},j_{\log b}) \le n/b$ and proceed on to literally computing $lcp(i_{\log b}, j_{\log b})$  in $O(n/b)$ time for each pair $(i_{\log b},j_{\log b}) \in P_{\log b}$. Let $i_{fin} = i_{\log b} + lcp(i_{\log b}, j_{\log b})$ and $j_{fin}= j_{\log b} + lcp(i_{\log b}, j_{\log b})$, then $i_{fin}$ and $j_{fin}$ are the position-indices from $i$ and $j$ such that $T[i,i_{fin}-1] = T[j,j_{fin}-1]$ and $T[i_{fin}] \neq T[j_{fin}]$. Thus we have $lcp(i,j) = i_{fin} - i$ for each pair $(i,j)\in P$.
+
+From the above description, we can easily come to the following theorem.
+\begin{thm}
+\label{thm:lcp:naive}
+The LCP of any {\em b} pairs of suffixes in $T$ can be correctly computed in $\mathcal{O}(n\log b)$ time and $\mathcal{O}(b)$ space with a high probability using LCP-BQT.
+\end{thm}
+Proof. The time complexity is dominated by the loop of $\log b$ rounds, where each round takes $\mathcal{O}(n)$ time to execute step 1 for computing the finger-prints of ${\sf pre}(T,l)$ and $\mathcal{O}(b)$ time for comparing the substrings by their finger-prints in step 2-3 if we compute $2^{\log n - k - 1}$ in advance. The space in need is limited to $O(b)$ words by using a hash table for recording and extracting the finger-prints of ${\sf pre}(T,l)$.
+
+
+\subsection{Implementation in RAM Model}\label{subsec:implementation_in_ram_model}
+
+Following the ideas described above, we present in this part the method for constructing the K-order LCP array of $T$ in RAM model, where the LCPA construction problem is transformed into the computation of $lcp(i,j)$ for all pairs $(i,j)\in P_T=\{(SA_T[1], SA_T[0]),(SA_T[2], SA_T[1])\ldots (SA_T[n], SA_T[n-1])\}$. Parameters and notations listed below are introduced for presentation convenience, where $i\in [1,n)$ and $k\in [0,\log K)$.
+
+\begin{itemize}
+\item $CPos_k$: arrays of size $2n$, where $CPos_k[2i]+1$ and $CPos_k[2i+1]$ indicate the starting and ending positions of a substring of ${\sf suf}(T,SA_T[i])$.
+\item $PPos_k$: arrays of size $2n$, where $PPos_k[2i]+1$ and $PPos_k[2i+1]$ indicate the starting and ending positions of a substring of ${\sf suf}(T,SA_T[i-1])$.
+\item $ICPos_k$ and $IPPos_k$: arrays of size $2n$, which are generated by radix-sorting $CPos_k$ and $PPos_k$, respectively.
+\item $HT$: a hash table for storing and retrieving finger-prints.
+\end{itemize}
+
+
+\begin{algorithm}[hbtp!]
+\caption{Compute K-Order $LCPA_T$ in RAM Model}
+\label{fig:alg:ram}
+K-LCPA-RAM($T$, $SA_T$, {\em n}, K, $HT$){\\
+\SetAlgoNoLine
+scan $SA_T$ rightward to compute $CPos_0$ and $PPos_0$. \\
+set $k = 0$. \\
+\While{$k < \log K$}{
+radix-sort $CPos_k$ and $PPos_k$ to compute $ICPos_k$ and $IPPos_k$. \\
+scan $T$, $ICPos_k$ and $IPPos_k$ rightward, iteratively compute the finger-print of ${\sf pre}(T,j)$ for each $j\in [0,n)$. Meanwhile, store $FP[0,j]$ in $HT[j]$ for each $j\in \{ICPos_k[i] \cup IPPos_k[i], 0 \le i < 2n\})$.  \\
+scan $CPos_k$ and $PPos_k$ rightward, compute $FP[CPos_k[2i],CPos_k[2i+1]$ and $FP[PPos_k[2i],PPos_k[2i+1]$ for each $i \in [1,n)$ to generate $CPos_{k+1}$ and $PPos_{k+1}$. \\
+set $k = k +1$ and clear $HT$. \\
+}
+scan $T$, $CPos_{\log K}$ and $PPos_{\log K}$, compute $lcp(CPos_{\log K}[2i],PPos_{\log K}[2i])$ in literal for each $i \in [1,n)$ to generate $LCPA$. \\
+}
+\end{algorithm}
+
+As depicted in Fig.~\ref{fig:alg:ram}, the while-loop in lines 4-9 performs $\log K$ rounds to compute $CPos_{\log K}$ and $PPos_{\log K}$ such that ${\sf lcp}(CPos_{\log K}[2i]+1,PPos_{\log K}[2i]+1])\le 1$. For the purpose, it initializes $CPos_0
+
+
+A key operation in Algorithm 1 is to compute the finger-prints of ${\sf pre}(T,l)$ for all $l\in \{ICPos_k[i] \cup IPPos_k[i], 0 \le i \le 2n-1\}$ during each round of the while-loop.
+ 
+To do this, we first radix-sort $CPos_k$ and $PPos_k$ to generate $ICPos_k$ and $IPPos_k$, and then compute all the required finger-prints iteratively in a scan of $T$, $ICPos_k$ and $IPPos_k$. This costs $O(n)$ time for each round and thus $O(n \log K)$ in total. After the while-loop, we have $lcp(CPos_{\log K}[2i],PPos_{\log K}[2i]) \le 1 $ for $i \in [1,n-1]$. Thus, it takes constant time to compute the $LCP$ for each pair $(CPos_{\log K}[2i],PPos_{\log K}[2i])$ and $O(n)$ time to generate $LCPA$ of $T$. This leads us to the following statement.
+\begin{thm}
+\label{thm:lcp:ram}
+Given $T$ and $SA_T$, the $K$-order $LCPA$ of $T$ can be correctly computed in $O(n \log K)$ time and $O(n)$ $RAM$ space with a high probability using LCP-BQT.
+\end{thm}
+Proof. Apparently, the space requirement is limited to $O(n)$. For the time complexity, the whole algorithm is timely linear to $O(n)$ except for the while-loop that spend $O(n \log K)$ time computing $P_{\log K}$.
+
+\section{$K$-Order LCPA Construction in EM Model}\label{sec:implementation_in_em_model}
+
+As observed in Algorithm 1, the finger-prints of prefix substrings are stored in the hash table $HT$ for quick lookups. This is feasible in RAM model, but becomes impractical when $n$ exceeds the capacity of internal memory, as $HT$ of size $O(n)$ cannot wholly reside on $RAM$ anymore. To this end, we present herein a disk-friendly external memory algorithm using $LCP-BQT$, where finger-prints can be sequentially retrieved from the external memory when needed.
+
+\subsection{Preliminaries}
+
+Given the capacity $M$ of $RAM$, we divide $T$ and its suffix array into $d=n/m$ blocks, where each block is of size $m=O(M)$ and thus can be processed as a whole internally. Besides, to facilitate the implementation in EM model, we extend $CPos_k$ and $PPos_k$ to form $ECPos_k$ and $EPPos_k$, each entry of which is a tuple $\langle index, pos, fp \rangle$ as described below.
+\begin{itemize}
+\item $pos$: the ending position index of prefix substring $T[0,pos]$.
+\item $index$: the array index.
+\item $fp$: the finger-print of prefix substring $T[0,pos]$.
+\end{itemize}
+
+\subsection{Details}
+
+As depicted in Fig.~\ref{fig:alg:em}, we perform one run of $EM$ sort to reorder elements of $ECPos_k$ and $EPPos_k$ by $pos$ and another run to reorder the elements back to their original positions by $index$ in lines 5 and 7, respectively, where the finger-prints of prefix substrings are iteratively computed and stored in the $fp$ field of the corresponding entries in line 6. Each run can be done in $O(n)$ time and space if we employ a two-pass radix-sort to sort the lowest $0.5\log n$ bits by the first pass and the highest $0.5\log n$ bits by the second pass. Thus we can easily arrive at the the following conclusion.
+
+\begin{thm}
+\label{thm:lcp:em}
+Given $T$ and $SA_T$, the $K$-order $LCPA$ of $T$ can be correctly computed in $O(n \log K)$ time and $O(n)$ $EM$ space with a high probability using LCP-BQT.
+\end{thm}
+
+\begin{algorithm}[hbtp!]
+\caption{Compute $K$-Order $LCPA_T$ in EM Model}
+\label{fig:alg:em}
+K-LCPA-EM($T$, $SA$, $n$, $K$){\\
+\SetAlgoNoLine
+scan $SA_T$ rightward to compute $ECPos_0$ and $EPPos_0$.\\
+set $k = 0$. \\
+\While{$k < \log K$}{
+sort $ECPos_k$ and $EPPos_k$ to produce $EICPos_k$ and $EICPos_k$ by $pos$. \\
+scan $T$, $EICPos_k$ and $EICPos_k$ rightward, compute $FP[0,j] \, (j \in \{EICPos_k[i] \cup EICPos_k[i], 0 \le i \le 2n-1\})$ and store the finger-print in the $fp$ field of the corresponding element in  $EICPos_k$ or $EICPos_k$.  \\
+sort $EICPos_k$ and $EICPos_k$ back to $ECPos_k$ and $EPPos_k$ by $index$. \\
+scan $ECPos_k$ and $ECPos_k$ rightward, compute $FP[ECPos_k[2i],ECPos_k[2i+1]$ and $FP[EPPos_k[2i],EPPos_k[2i+1]$ for $i \in [1,n-1]$ to generate $ECPos_{k+1}$ and $EPPos_{k+1}$. \\
+set $k = k +1$. \\
+}
+scan $T$, $ECPos_{\log K}$ and $EPPos_{\log K}$, compute $lcp(ECPos_{\log K}[2i],EPPos_{\log K}[2i])$ in literal for $i \in [1,n-1]$ to generate $LCPA$. \\
+}
+\end{algorithm}
+
+
+\subsection{Discussions}\label{subsec:discussions}
+
+In this part, we make a discussion on parallelizing algorithm 2 in a distributed system consisting of $d$ computing nodes $\{N_0, N_1, ...N_{d-1}\}$, where the $RAM$ and $EM$ capacities of each node are $M$ and $E$. Besides, the computing nodes are interconnected with each other by a gigabit switch running in full duplex mode. We divide $T$, $SA_T$, $ECPos_k$ and $EPPos_k$ into $d=n/e$ fixed-size blocks as below, where $j\in [0,e-1]$ and $i\in [0,d-1]$.
+\begin{itemize}
+\item $N_i\_T$: array of size $e+K$, where $N_i\_T[j] = T[ie+j]$. Two neighboring blocks overlap on $K$ characters.
+\item $N_i\_SA_T$: array of size $e$, where $N_i\_SA_T[j] =  SA_T[ie+j]$.
+\item $N_i\_ECPos_k$: array of size $2e$, where $N_i\_ECPos_k[2j] = SA_T[2ie+j]-1$ and $N_i\_ECPos[2ie+j]+2^{\log n - 1}$.
+\item $N_i\_EPPos_k$: array of size $2e$, where $N_i\_EPPos_k[2j] = SA_T[2ie+j-1]-1$ and $N_i\_EPPos[2ie+j-1]+2^{\log n - 1}$.
+\end{itemize}
+
+Recalling that, algorithm 2 manages to sequentially compute and retrieve finger-prints by performing two runs of radix-sort in external memory during each round of the while-loop. This can be emulated by the following procedure running on each computing node, where $i,j\in [0,d-1]$ and $k\in [0,\log K)$.
+
+\begin{itemize}
+\item step1: create delivering buffers $N_{ij}\_DBuf_1$, $N_{ij}\_DBuf_2$ for each node $N_j$ and receiving buffers $N_{i}\_RBuf_1$, $N_{i}\_RBuf_2$ for current node $N_i$.
+\item step2: scan $N_i\_SA_T$ rightward to compute $N_i\_ECPos_k$ and $N_i\_EPPos_k$. Push $N_i\_ECPos_k[l]$ into $N_{ij}\_DBuf_1$ if $N_i\_ECPos_k[l].pos \in [j*e,(j+1)*e)$, and push $N_i\_EPPos_k[l]$ into $N_{ij}\_DBuf_2$ if $N_i\_EPPos_k[l].pos \in [j*e,(j+1)*e)$.
+\item step3: deliver entries in $N_{ij}\_DBuf_1$ and $N_{ij}\_DBuf_2$ to each node $N_j$.
+\item step4: receive entries from $N_{ij}\_DBuf_1$, $N_{ij}\_DBuf_2$ and merge them into $N_{i}\_RBuf_1$ and $N_{i}\_RBuf_2$, respectively.
+\item step5: radix-sort items in $N_{i}\_RBuf_1$ and $N_{i}\_RBuf_2$ by $pos$ to form $N_i\_EICPos$ and $N_i\_EIPPos$.
+\item step6: scan $N_i\_T$, $N_i\_EICPos$ and $N_i\_EIPPos$ rightward, compute $FP[0,l]$ of $N_i\_T[0,l]$ and store the $FP$ value in the $fp$ field of the corresponding entry in $N_i\_EICPos$ or $N_i\_EIPPos$.
+\item step7: scan $N_i\_EICPos$ and $N_i\_EIPPos$ rightward. Push $N_i\_EICPos_k[l]$ into $N_{ij}\_DBuf_1$ if $N_i\_EICPos_k[l].pos \in [j*e,(j+1)*e)$. Similarly, push $N_i\_EIPPos_k[l]$ into $N_{ij}\_DBuf_2$ if $N_i\_EIPPos_k[l].pos \in [j*e,(j+1)*e)$.
+\item step8: deliver entries in $N_{ij}\_DBuf_1$ and $N_{ij}\_DBuf_2$ to each node $N_j$.
+\item step9: receive entries from $N_{ij}\_DBuf_1$ and $N_{ij}\_DBuf_2$ and merge them into $N_{i}\_RBuf_1$ and $N_{i}\_RBuf_2$, respectively.
+\item step10: radix-sort items in $N_{i}\_RBuf_1$ and $N_{i}\_RBuf_2$ by $index$ to rearrange $N_i\_EPPre_k$ and $N_i\_EPCur_k$, respectively.
+\end{itemize}
+
+During each round of the while-loop, a computing node $N_i$ delivers and receives at most $2e$ entries of size O(1), thus the communication overhead for each node is linear to $O(\frac{n}{d})$. Then we have the following statement.
+
+\begin{thm}
+\label{thm:lcp:pdm}
+Given $T$ and $SA_T$, the $K$-order $LCPA$ of $T$ can be correctly computed in a distributed system of $d$ computing nodes in $O(\frac{n}{d}\log K)$ time and $O(E)$ space with a high probability using $LCP-BQT$.
+\end{thm}
+
+\section{Experimental Results}\label{sec:experimental_results}
+
+xxxxxx
+
+
+
+\section{Conclusions}\label{sec:conclusion}
+
+We present in this paper a practical $LCP$ construction scheme that can be deployed in $RAM$ and $EM$ model. Both the theoretical analysis and simulation results show that xxx. We also show that the scheme is also scalable for running in a typical distributed system composed of $d$ computing nodes with an elaborate arrangement. Given $d=O(\log K)$, the time and space requirements for each node are $O(n)$ and $O(n/d)$, respectively.
+
+\bibliographystyle{unsrt}
+\bibliography{bibfile}
+
+\end{document}
+
+
+
+Given $T$ and a set of $b$ pairs of indices $P$, the $LCP$ batch querying technique performs a loop of $\log b$ rounds to compute $lcp(i,j)$ for all pairs $(i,j)$ in $P$. The goal of round $k$ is to decide whether $lcp(i_k,j_k) \le 2^{\log n - k - 1}$ or not for each pair $(i_k,j_k)$ in $P_k$ and generate $P_{k+1}$ served as the input for round $k+1$, where the following two properties remain invariant during the whole loop.
+
+\begin{itemize}
+\item At the beginning of round $k$, for each pair $(i_k,j_k) \in P_k$, $lcp(i_k,j_k) \le 2^{\log n - k}$.
+\item At the end of round $k$, for each pair $(i_{k+1},j_{k+1}) \in P_{k+1}$, $lcp(i_{k+1},j_{k+1}) \le 2^{\log n - k - 1}$.
+\end{itemize}
+
+This is done by comparing the two substrings $T[i_k,i_k+2^{\log n - k - 1}]$ and $T[j_k,j_k+2^{\log n - k - 1}]$  in their lexical order. If they are unequal, then $lcp(i_k,j_k) \le 2^{\log n - k - 1}$. However, it takes $O(2^{\log n - k - 1})$ time to compare the two substrings literally in the worst case. As a solution to relieving the overhead, authors in~\cite{Philip2013} employed a finger-printing function~\cite{Karp1987} to convert a string comparison into its integer counterpart that can be executed in O(1) time. In details, the finger-print~(FP) of a string $X[0,n)$ is defined by the formula $FP[0,n-1] = \sum_{l=0}^{n-1} \delta^{n-1-l} \cdot T[l] \, mod \, L$, where $L$ is a prime and $\delta$ is an integer randomly chosen from $[1,L)$. It has been proved that the error probability of two different strings having a same finger-print can be ignored when $L$ is large.
